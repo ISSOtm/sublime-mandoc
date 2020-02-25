@@ -1,0 +1,448 @@
+%YAML 1.2
+---
+# See http://www.sublimetext.com/docs/3/syntax.html
+name: Mandoc
+scope: text.mandoc
+
+# Quick note on roff requests:
+#
+# Since their usage is discouraged in mandoc documents, and this definition is
+# already huge and painful, I did not add support for them, which will cause them
+# to show up as "illegal".
+# `\f` is supported, but marked as deprecated.
+# roff character escapes marked as deprecated by roff(7) are not supported, and
+# will show up as "illegal".
+
+variables:
+  one_char_escape: "[~0|^&)%:e'`-]"
+  two_char_escape: (?:\|=|~=|~~|=~|<=|=>|<<|>>|!=|==|<-|->|<>|-\+|\+-|\*\*|/_|12|14|34|18|38|58|78|3d|%0|-D|-h|\.[ij]|a[-".^abcdho~]|'[AEIOUYaeiouy]|`[AEIOUaeiou]|~[ANOano]|:[AEIOUaeiou]|\^[AEIOUaeiou]|,[Cc]|/[LOlo]|o[Aa]|\*[ABGDEZYHIKLMCOPRSTUFXQWabgdezyhiklmcoprstufxqw]|\+[hfpe]|ts|AE|ae|Ah|AN|an|ap|aq|at|ba|bb|Bq|bq|br|bu|bv|c\*|c\+|ca|ci|CL|co|cq|CR|Cs|ct|cu|dA|da|dd|de|dg|DI|di|Do|dq|em|en|eq|es|Eu|eu|f/|fa|Fc|fc|ff|Fi|fi|Fl|fl|fm|Fn|Fo|fo|ga|gr|hA|ha|HE|ho|hy|ib|if|IJ|ij|Im|ip|is|lA|la|lB|lb|lC|lc|lf|lh|lk|lq|lt|lz|mc|mi|mo|mu|nb|nc|nm|no|OE|oe|Of|OK|Om|oq|OR|or|pc|pd|pl|Po|pp|ps|pt|r!|r\?|rA|ra|rB|rb|rC|rc|Re|rf|rg|rh|rk|rn|rq|rs|rt|ru|S1|S2|S3|sb|sc|Sd|sd|sh|sl|SP|sp|sq|sr|ss|st|te|tf|ti|tm|TP|Tp|uA|ua|ul|vA|va|wp|Ye)
+  scaling_width: '[+-]?[0-9]*.[0-9]*[ciPpfvmnuM]'
+  # Zero-padded left to at least 4 digits, letters uppercase only
+  # Refer to the `UNICODE CHARACTERS' section of roff(7)
+  # FIXME: could make checking stricter but that'd be *annoying* to implement as a regex
+  unicode_point: (?:000[0-9A-F]|00[0-9A-F]{2}|0[0-9A-F]{3}|[0-8A-F]{4,})
+
+contexts:
+  prototype:
+    - include: escapes
+    # Skip parsing the inside of quoted strings
+    - match: '(?<=\s)"'
+      scope: punctuation.definition.string.begin.mandoc
+      push:
+        - include: escapes
+        - match: '""'
+          scope: constant.character.escape.mandoc
+        - match: '"'
+          scope: punctuation.definition.string.end.mandoc
+          pop: true
+        - match: $\n?
+          scope: invalid.deprecated.mandoc
+          pop: true
+
+  escapes:
+    # Delimiters happen in all macro arg lists
+    - match: (?<=\s)(?:[(\[.,:;)\]?!|]|\\\.)(?=\s)
+      scope: punctuation.delimiter.mandoc
+    # Font requests
+    - match: \\f[BIPR1-4]
+      scope: invalid.deprecated.mandoc
+    - match: \\f\((?:BI|C[BIRW])
+      scope: invalid.deprecated.mandoc
+    ## Special characters
+    # Refer to the `SPECIAL CHARACTERS' section of roff(7)
+    - match: \\{{one_char_escape}}
+      scope: constant.character.escape.mandoc
+    # Unbreakable space, gets a different context so as to notice it
+    # Kind of a hack, but not incorrect...
+    - match: '\\(?: |\[ \])'
+      scope: markup.raw.inline.mandoc
+    - match: \\\({{one_char_escape}}
+      scope: constant.character.escape.mandoc
+    - match: \\\[(?:{{one_char_escape}}|{{two_char_escape}}|braceex|brace(?:left|right)(?:bt|ex|mid|tp)|bracket(?:left|right)(?:bt|ex|tp)|coproduct|hbar|integral|paren(?:left|right)(?:bt|ex|tp)|product|sqrt|sum|t\+-|tdi|tmu|tno)\]
+      scope: constant.character.escape.mandoc
+    # Not a good idea because the period is still specially processed
+    - match: \\\.
+      scope: invalid.deprecated.mandoc
+    # This works fine with mandoc, but isn't portable; use `\e' instead
+    - match: \\\\
+      scope: invalid.deprecated.mandoc
+    # Deprecated predef strings
+    # `\*(Ba' has side effects like `|', but unlike `\(ba'
+    - match: \\\*(?:R|q|\((?:Ba|Ne|Ge|Le|Gt|Lt|Pm|If|Pi|Na|Am|Tm|Rq|Lq|lp|rp|lq|rq|ua|va|<=|>=|aa|ga|Px|Ai))
+      scope: invalid.deprecated.mandoc
+    # Unicode escapes
+    - match: \\\[u{{unicode_point}}\]
+      scope: constant.character.escape.mandoc
+    - match: \\C'u{{unicode_point}}'
+      scope: constant.character.escape.mandoc
+    # Deprecated charset positional inclusions
+    - match: \\\[char[0-9]+\]
+      scope: invalid.deprecated.mandoc
+    - match: \\N'[0-9]+'
+      scope: invalid.deprecated.mandoc
+    # Any escape not matched by any of the above is illegal
+    - match: \\(?:[^\[(]|\(.{,2}|\[[^\]]*\]?)
+      scope: invalid.illegal.mandoc
+
+
+  main:
+    # The main context is the initial starting point of our syntax.
+    # Include other contexts from here (or specify them directly).
+    - include: comment
+    - include: macro
+
+
+  comment:
+    - match: (?:^[.'])?\\\"
+      scope: punctuation.definition.comment.mandoc
+      push:
+        - meta_scope: comment.line.mandoc
+        - match: $\n?
+          pop: true
+    # Lines with just a control character are stripped
+    - match: ^[.\']\s*$
+      scope: comment.line.mandoc
+
+  macro:
+    - include: block_full_explicit
+    - include: block_full_implicit
+    - include: block_partial_explicit
+    - include: block_partial_implicit
+    - include: special_block
+    - include: in_line
+    # Anything not matched by the above is an invalid macro
+    - match: ^[.\']\S*
+      scope: invalid.illegal.mandoc
+
+  block_full_explicit:
+    # None of the macros here are parsed
+    - match: ^[.\']Bd(?=\s)
+      scope: keyword.mandoc
+      push:
+        - match: $\n?
+          scope: invalid.illegal.mandoc
+          set:
+            - include: display_block_args
+            - match: $\n?
+              set:
+                - meta_content_scope: meta.block.display.mandoc
+                - include: display_block
+        - match: (?<=\s)-(?:(centered)|filled|ragged)(?=\s)
+          scope: entity.other.attribute-name.mandoc
+          captures:
+            1: invalid.deprecated.mandoc
+          set:
+            - include: display_block_args
+            - match: $\n?
+              set:
+                - meta_content_scope: meta.block.display.mandoc
+                - include: display_block
+        - match: (?<=\s)-(?:literal|unfilled)(?=\s)
+          scope: entity.other.attribute-name.mandoc
+          set:
+            - include: display_block_args
+            - match: $\n?
+              set:
+                - meta_content_scope: markup.raw.block.mandoc
+                - include: display_block
+    - match: ^[.\']Bf(?=\s)
+      scope: keyword.mandoc
+      push:
+        # Without arguments, the macro has no effect
+        - match: $\n?
+          scope: invalid.deprecated.mandoc
+          set:
+            - meta_content_scope: meta.block.font-mode.mandoc
+            - include: font_mode_block
+        - match: (?:-emphasis|Em)(?=\s)
+          scope: entity.other.attribute-name.mandoc
+          set:
+            - meta_content_scope: markup.italic.mandoc
+            - include: font_mode_block
+        - match: (?:-literal|Li)(?=\s)
+          scope: entity.other.attribute-name.mandoc
+          set:
+            - meta_scope: invalid.deprecated.mandoc
+            - meta_content_scope: markup.raw.block.mandoc
+            - include: font_mode_block
+        - match: (?:-symbolic|Sy)(?=\s)
+          scope: entity.other.attribute-name.mandoc
+          set:
+            - meta_content_scope: markup.bold.mandoc
+            - include: font_mode_block
+    - match: ^[.\']Bk(?=\s)
+      scope: keyword.mandoc
+      push:
+        - match: $
+          set:
+            - meta_scope: invalid.illegal.mandoc
+            - match: $\n?
+              pop: true
+        - match: (?<=\s)(-words)\s*$\n?
+          captures:
+            1: entity.other.attribute-name.mandoc
+          set:
+            - meta_content_scope: meta.block.keep.mandoc
+            - match: ^[.\']Ek(?=\s)
+              scope: keyword.mandoc
+              pop: true
+            - include: main
+    - match: ^[.\']Bl(?=\s)
+      scope: keyword.mandoc
+      push:
+        - match: $\n?
+          scope: invalid.illegal.mandoc
+          set:
+            - include: list_args
+            - match: $\n?
+              set:
+                - meta_content_scope: meta.block.display.mandoc
+                - include: list
+        - match: (?<=\s)-(?:bullet|column|dash|diag|hang|hyphen|inset|item|ohang|tag)(?=\s)
+          scope: entity.other.attribute-name.mandoc
+          set:
+            - include: list_args
+            - match: $\n?
+              set:
+                - meta_content_scope: markup.list.unnumbered.mandoc
+                - include: list
+        - match: (?<=\s)-enum(?=\s)
+          scope: entity.other.attribute-name.mandoc
+          set:
+            - include: list_args
+            - match: $\n?
+              set:
+                - meta_content_scope: markup.list.numbered.mandoc
+                - include: list
+  display_block_args:
+    - match: (?<=\s)-offset\s+(?:(indent|indent-two|left|right|center)|(Ds)|({{scaling_width}})|(\S+))(?=\s)
+      scope: entity.other.attribute-name.mandoc
+      captures:
+        # Predefined string
+        1: variable.language.mandoc
+        # Macro invocation
+        2: keyword.mandoc
+        # Scaling width
+        3: constant.numeric.mandoc
+        # Arbitrary string
+        4: string.unquoted.mandoc
+    - match: (?<=\s)-compact(?=\s)
+      scope: entity.other.attribute-name.mandoc
+  display_block:
+    - match: ^[.\']Ed(?=\s)
+      scope: keyword.mandoc
+      pop: true
+    - include: main
+  font_mode_block:
+    - match: ^[.\']Ef(?=\s)
+      scope: keyword.mandoc
+      pop: true
+    - include: main
+  list_args:
+    - include: display_block_args
+    - match: (?<=\s)-width\s+(?:(indent|indent-two|left|right|center)|(Ds)|({{scaling_width}})|(\S+))(?=\s)
+      scope: entity.other.attribute-name.mandoc
+      captures:
+        # Predefined string
+        1: variable.language.mandoc
+        # Macro invocation
+        2: keyword.mandoc
+        # Scaling width
+        3: constant.numeric.mandoc
+        # Arbitrary string
+        4: string.unquoted.mandoc
+  # TODO: possibly make a different context for each list type,
+  #       since they format `It' differently
+  list:
+    - match: ^[.\']El(?=\s)
+      scope: keyword.mandoc
+      pop: true
+    - match: ^[.\']It(?=\s)
+      scope: keyword.mandoc
+      push:
+        - match: (?<=\s)Ta(?=\s)
+          scope: keyword.mandoc
+        - include: callable_macro
+        - match: $\n?
+          pop: true
+    - include: main
+
+  block_full_implicit:
+    # Non-parsed
+    - match: ^[.\']Nd(?=\s)
+      scope: keyword.mandoc
+    # Parsed
+    # FIXME: Technically `Nm` is this if called as the first macro in a SYNOPSIS section, but this would be tedious to handle
+    - match: ^[.\']Sh(?=\s)
+      scope: keyword.mandoc
+      push:
+        - meta_scope: markup.heading.mandoc
+        - meta_content_scope: entity.name.section.mandoc
+        - include: callable_macro
+        - match: (?<=\s)\S+(?=\s)
+          scope: meta.toc-list.mandoc
+        - match: $\n?
+          set:
+            - meta_content_scope: meta.block.section.mandoc
+            - match: (?=^[.\']Sh(?=\s))
+              pop: true
+            - include: main
+    - match: ^[.\']Ss(?=\s)
+      scope: keyword.mandoc
+      push:
+        - meta_scope: markup.heading.mandoc
+        - meta_content_scope: entity.name.section.mandoc
+        - include: callable_macro
+        - match: (?<=\s)\S+(?=\s)
+          scope: meta.toc-list.mandoc
+        - match: $\n?
+          set:
+            - meta_content_scope: meta.block.sub-section.mandoc
+            - match: (?=^[.\'](?:Sh|Ss)\s)
+              pop: true
+            - include: main
+
+  block_partial_explicit:
+    # Non-parsed
+    - match: ^[.\']Rs(?=\s)
+      scope: keyword.mandoc
+      push:
+        - meta_scope: meta.block.bibliography.mandoc
+        # Only macros included are the `.%` ones
+        - match: ^[.\']%[ABCDIJNOPQRTUV](?=\s)
+          scope: keyword.mandoc
+        - match: ^[.\']Re(?=\s)
+          scope: keyword.mandoc
+          pop: true
+        - include: comment
+    - match: ^[.\']Fo(?=\s)
+      scope: keyword.mandoc
+    # Parsed
+    - match: ^[.\'](?:Ac|Ao|Bc|Bo|Brc|Bro|Dc|Do|Ec|Eo|Fc|Oc|Oo|Pc|Po|Qc|Qo|Sc|So|Xc|Xo)(?=\s)
+      scope: keyword.mandoc
+
+  block_partial_implicit:
+    # All macros here are parsed
+    - match: ^[.\'][DQ]l(?=\s)
+      scope: keyword.mandoc
+      push:
+        - meta_scope: markup.raw.inline.mandoc
+        - include: callable_macro
+        - match: $\n?
+          pop: true
+    - match: ^[.\']En(?=\s)
+      scope: invalid.deprecated.mandoc
+    - match: ^[.\'](?:Aq|Bq|Brq|D1|Dq|Op|Pq|Qq|Sq|Vt)(?=\s)
+      scope: keyword.mandoc
+      push:
+        - meta_content_scope: meta.block.mandoc
+        - include: callable_macro
+        - match: $\n?
+          pop: true
+
+  in_line:
+    # Non-parsed
+    - match: ^[.\']Dt(?=\s)
+      scope: keyword.mandoc
+      push:
+        - meta_scope: markup.heading.mandoc
+        - match: $\n?
+          pop: true
+    - match: ^[.\']Rv(?=\s)
+      scope: keyword.mandoc
+      push:
+        - match: (?<=\s)-std(?=\s)
+          scope: entity.other.attribute-name.mandoc
+          pop: true
+        - match: (?<=\s)(?=\S)
+          meta_scope: invalid.illegal.mandoc
+          pop: true
+    - match: ^[.\']Sm(?=\s)
+      scope: keyword.mandoc
+      push:
+        - match: (?<=\s)(?:on|off)(?=\s)
+          scope: entity.other.attribute-name.mandoc
+          pop: true
+        - match: (?<=\s)(?=\S)
+          meta_scope: invalid.illegal.mandoc
+          pop: true
+    - match: ^[.\'](?:Bt|Db|Hf|Lp|Ud)(?=\s)
+      scope: invalid.deprecated.mandoc
+    - match: ^[.\'](?:Dd|Ex|Fd|Os|Pp)(?=\s)
+      scope: keyword.mandoc
+    # Parsed
+    - match: ^[.\']Em(?=\s)
+      scope: keyword.mandoc
+      push:
+        - meta_scope: markup.italic.mandoc
+        - include: callable_macro
+        - match: $\n?
+          pop: true
+    - match: ^[.\']Li(?=\s)
+      scope: invalid.deprecated.mandoc
+      push:
+        - meta_scope: markup.raw.inline.mandoc
+        - include: callable_macro
+        - match: $\n?
+          pop: true
+    - match: ^[.\'](?:Lk|Mt)(?=\s)
+      scope: keyword.mandoc
+      push:
+        - meta_scope: markup.underline.link.mandoc
+        - include: callable_macro
+        - match: $\n?
+          pop: true
+    - match: ^[.\']Pa(?=\s)
+      scope: keyword.mandoc
+      push:
+        - meta_scope: meta.path.mandoc
+        - include: callable_macro
+        - match: $\n?
+          pop: true
+    - match: ^[.\']St(?=\s)
+      scope: keyword.mandoc
+      push:
+        - include: callable_macro
+        - match: (?<=\s)-(?:ansiC|ansiC-89|isoC(?:-90|-amd1|-tcor[12]|-99|-2011)?|p1003\.1(?:-88|-90|b-93|b|c-95|i-95|-96|g-2000|-200[148])?|iso9945-1-9[06]|xpg[34]|p1003\.2(?:a?-92)?|susv[1-4]|x(?:pg|sh|curses)4\.2|svid4|x(?:bd|sh|cu)5|xns5(?:\.2)?|ieee754|iso8601|iso-8802-3|ieee1275-94)(?=\s)
+          scope: entity.other.attribute-name.mandoc
+        - match: $\n?
+          pop: true
+    - match: ^[.\']Sx(?=\s)
+      scope: keyword.mandoc
+      push:
+        - meta_scope: markup.underline.link.mandoc
+        - meta_content_scope: meta.path.mandoc
+        - include: callable_macro
+        - match: $\n?
+          pop: true
+    - match: ^[.\']Sy(?=\s)
+      scope: keyword.mandoc
+      push:
+        - meta_scope: markup.bold.mandoc
+        - include: callable_macro
+        - match: $\n?
+          pop: true
+    - match: ^[.\']Xr(?=\s)
+      scope: keyword.mandoc
+      push:
+        - meta_scope: markup.underline.link.mandoc
+        - include: callable_macro
+        - match: $\n?
+          pop: true
+    - match: ^[.\'](?:Es|Fr|Ot|Tn|Ux)(?=\s)
+      scope: invalid.deprecated.mandoc
+    - match: ^[.\'](?:Ad|An|Ap|Ar|At|Bsx|Bx|Cd|Cm|Dv|Dx|Er|Ev|Fa|Fl|Fn|Ft|Fx|Ic|Ms|Nm|No|Nx|Ox|Pf|Va|Vt)(?=\s)
+      scope: keyword.mandoc
+      push:
+        - include: callable_macro
+        - match: $\n?
+          pop: true
+    - match: ^[.\']Ns(?=\s) # No effect when at line start, so probably wrong
+      scope: invalid.deprecated.mandoc
+
+  # TODO: handle argument formatting for those as well
+  callable_macro:
+    - match: (?<=\s)(?:E[ns]|Fr|Li|Ot|Tn|Ux)(?=\s)
+      scope: invalid.deprecated.mandoc
+    - match: (?<=\s)(?:Ac|Ao|Bc|Bo|Brc|Bro|Dc|Do|Ec|Eo|Fc|Oc|Oo|Pc|Po|Qc|Qo|Sc|So|Xc|Xo|Aq|Bq|Brq|Dq|Op|Pq|Ql|Qq|Sq|Vt|Ad|An|Ap|Ar|At|Bsx|Bx|Cd|Cm|Dv|Dx|Em|Er|Ev|Fa|Fl|Fn|Ft|Fx|Ic|Lk|Ms|Mt|Nm|No|Ns|Nx|Ox|Pa|Pf|Sx|Sy|Va|Vt|Xr)(?=\s)
+      scope: keyword.mandoc

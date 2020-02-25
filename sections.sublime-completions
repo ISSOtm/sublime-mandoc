@@ -1,0 +1,26 @@
+{
+	"scope": "entity.name.section.mandoc",
+
+	"completions": [
+		"NAME",
+		"LIBRARY",
+		"SYNOPSIS",
+		"DESCRIPTION",
+		"CONTEXT",
+		"IMPLEMENTATION NOTES",
+		"RETURN VALUES",
+		"ENVIRONMENT",
+		"FILES",
+		"EXIT STATUS",
+		"EXAMPLES",
+		"DIAGNOSTICS",
+		"ERRORS",
+		"SEE ALSO",
+		"STANDARDS",
+		"HISTORY",
+		"AUTHORS",
+		"CAVEATS",
+		"BUGS",
+		"SECURITY CONSIDERATIONS"
+	]
+}

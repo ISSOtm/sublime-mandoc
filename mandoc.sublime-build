@@ -1,0 +1,7 @@
+{
+	"selector": "text.mandoc",
+
+	"target": "exec",
+	"working_dir": "${file_path}",
+	"shell_cmd": "mandoc ${file} | col -b"
+}
