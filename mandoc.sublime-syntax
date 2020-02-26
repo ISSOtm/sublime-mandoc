@@ -108,7 +108,6 @@ contexts:
     - include: block_full_implicit
     - include: block_partial_explicit
     - include: block_partial_implicit
-    - include: special_block
     - include: in_line
     # Anything not matched by the above is an invalid macro
     - match: ^[.\']\S*
