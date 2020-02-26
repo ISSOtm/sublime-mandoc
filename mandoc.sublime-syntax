@@ -275,11 +275,9 @@ contexts:
     - match: ^[.\']Sh(?=\s)
       scope: keyword.mandoc
       push:
-        - meta_scope: markup.heading.mandoc
+        - meta_scope: markup.heading.1.mandoc
         - meta_content_scope: entity.name.section.mandoc
         - include: callable_macro
-        - match: (?<=\s)\S+(?=\s)
-          scope: meta.toc-list.mandoc
         - match: $\n?
           set:
             - meta_content_scope: meta.block.section.mandoc
@@ -289,11 +287,9 @@ contexts:
     - match: ^[.\']Ss(?=\s)
       scope: keyword.mandoc
       push:
-        - meta_scope: markup.heading.mandoc
+        - meta_scope: markup.heading.2.mandoc
         - meta_content_scope: entity.name.section.mandoc
         - include: callable_macro
-        - match: (?<=\s)\S+(?=\s)
-          scope: meta.toc-list.mandoc
         - match: $\n?
           set:
             - meta_content_scope: meta.block.sub-section.mandoc

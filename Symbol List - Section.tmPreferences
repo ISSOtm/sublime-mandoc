@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<string>Symbol List: Section</string>
+	<key>scope</key>
+	<string>markup.heading.1.mandoc, markup.heading.2.mandoc</string>
+	<key>settings</key>
+	<dict>
+		<key>showInSymbolList</key>
+		<integer>1</integer>
+		<key>symbolTransformation</key>
+		<string><![CDATA[
+		s/\s*$//;
+		s/^[.']Sh\s+//;
+		s/^[.']Ss\s+/  /; # Make subsections stand out as such
+		s/(?<=\s)(?:Ac|Ao|Bc|Bo|Brc|Bro|Dc|Do|Ec|Eo|Fc|Oc|Oo|Pc|Po|Qc|Qo|Sc|So|Xc|Xo|Aq|Bq|Brq|Dq|Op|Pq|Ql|Qq|Sq|Vt|Ad|An|Ap|Ar|At|Bsx|Bx|Cd|Cm|Dv|Dx|Em|Er|Ev|Fa|Fl|Fn|Ft|Fx|Ic|Lk|Ms|Mt|Nm|No|Ns|Nx|Ox|Pa|Pf|Sx|Sy|Va|Vt|Xr|E[ns]|Fr|Li|Ot|Tn|Ux)\s+//g;
+		]]></string>
+	</dict>
+</dict>
+</plist>
