@@ -284,7 +284,7 @@ contexts:
         - match: $\n?
           set:
             - meta_content_scope: meta.block.section.mandoc
-            - match: (?=^[.\']Sh(?=\s))
+            - match: (?=^[.\']Sh\s)
               pop: true
             - include: main
     - match: ^[.\']Ss(?=\s)
