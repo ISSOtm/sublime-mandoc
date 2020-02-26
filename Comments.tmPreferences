@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
     <key>name</key>
-    <string>Miscellaneous</string>
+    <string>Comments</string>
     <key>scope</key>
-    <string>source.rgbds</string>
+    <string>text.mandoc</string>
     <key>settings</key>
     <dict>
         <key>shellVariables</key>
