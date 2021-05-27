@@ -380,7 +380,7 @@ contexts:
         - include: callable_macro
         - match: $\n?
           pop: true
-    - match: ^[.\'](?:Lk|Mt)(?=\s)
+    - match: ^[.\'](?:Lk|Mt)\s
       scope: keyword.mandoc
       push:
         - meta_scope: markup.underline.link.mandoc
@@ -402,7 +402,7 @@ contexts:
           scope: entity.other.attribute-name.mandoc
         - match: $\n?
           pop: true
-    - match: ^[.\']Sx(?=\s)
+    - match: ^[.\']Sx\s
       scope: keyword.mandoc
       push:
         - meta_scope: markup.underline.link.mandoc
@@ -410,14 +410,14 @@ contexts:
         - include: callable_macro
         - match: $\n?
           pop: true
-    - match: ^[.\']Sy(?=\s)
+    - match: ^[.\']Sy\s
       scope: keyword.mandoc
       push:
         - meta_scope: markup.bold.mandoc
         - include: callable_macro
         - match: $\n?
           pop: true
-    - match: ^[.\']Xr(?=\s)
+    - match: ^[.\']Xr\s
       scope: keyword.mandoc
       push:
         - meta_scope: markup.underline.link.mandoc
