@@ -214,7 +214,7 @@ contexts:
                 - meta_content_scope: markup.list.numbered.mandoc
                 - include: list
   display_block_args:
-    - match: (?<=\s)-offset\s+(?:(indent|indent-two|left|right|center)|(Ds)|({{scaling_width}})|(\S+))(?=\s)
+    - match: (?<=\s)-offset\s+(?:(indent|indent-two|left|right|center)|(Ds)|({{scaling_width}})|((?:"[^"]*")|(?:\S+)))(?=\s)
       scope: entity.other.attribute-name.mandoc
       captures:
         # Predefined string
@@ -239,7 +239,7 @@ contexts:
     - include: main
   list_args:
     - include: display_block_args
-    - match: (?<=\s)-width\s+(?:(indent|indent-two|left|right|center)|(Ds)|({{scaling_width}})|(\S+))(?=\s)
+    - match: (?<=\s)-width\s+(?:(indent|indent-two|left|right|center)|(Ds)|({{scaling_width}})|((?:"[^"]*")|(?:\S+)))(?=\s)
       scope: entity.other.attribute-name.mandoc
       captures:
         # Predefined string
