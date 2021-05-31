@@ -51,6 +51,13 @@ contexts:
     # Macro arguments
     - match: \\\\\$[*1-9]+
       scope: variable.language.mandoc
+    # Predefined strings
+    - match: \\\*(?:(?:\[([^]]+)\])|(?:\((..))|(.))
+      scope: constant.character.escape.mandoc
+      captures:
+        1: variable.language.mandoc
+        2: variable.language.mandoc
+        3: variable.language.mandoc
     ## Special characters
     # Refer to the `SPECIAL CHARACTERS' section of roff(7)
     - match: \\{{one_char_escape}}
@@ -437,6 +444,11 @@ contexts:
           pop: true
     - match: ^[.\']Ns(?=\s) # No effect when at line start, so probably wrong
       scope: invalid.deprecated.mandoc
+    - match: ^([.\'][ad]s)\s([^\s]+)\s"?(.+)
+      captures:
+        1: keyword.mandoc
+        2: variable.language.mandoc
+        3: string.unquoted.mandoc
 
   # TODO: handle argument formatting for those as well
   callable_macro:
