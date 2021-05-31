@@ -9,12 +9,12 @@ scope: text.mandoc
 # Since their usage is discouraged in mandoc documents, and this definition is
 # already huge and painful, I did not add support for them, which will cause them
 # to show up as "illegal".
-# `\f` is supported, but marked as deprecated.
+# Context-less `\f` is supported.
 # roff character escapes marked as deprecated by roff(7) are not supported, and
 # will show up as "illegal".
 
 variables:
-  one_char_escape: "[~0|^&)%:e'`-]"
+  one_char_escape: "[~0|^&)%:e'`-c]"
   two_char_escape: (?:\|=|~=|~~|=~|<=|=>|<<|>>|!=|==|<-|->|<>|-\+|\+-|\*\*|/_|12|14|34|18|38|58|78|3d|%0|-D|-h|\.[ij]|a[-".^abcdho~]|'[AEIOUYaeiouy]|`[AEIOUaeiou]|~[ANOano]|:[AEIOUaeiou]|\^[AEIOUaeiou]|,[Cc]|/[LOlo]|o[Aa]|\*[ABGDEZYHIKLMCOPRSTUFXQWabgdezyhiklmcoprstufxqw]|\+[hfpe]|ts|AE|ae|Ah|AN|an|ap|aq|at|ba|bb|Bq|bq|br|bu|bv|c\*|c\+|ca|ci|CL|co|cq|CR|Cs|ct|cu|dA|da|dd|de|dg|DI|di|Do|dq|em|en|eq|es|Eu|eu|f/|fa|Fc|fc|ff|Fi|fi|Fl|fl|fm|Fn|Fo|fo|ga|gr|hA|ha|HE|ho|hy|ib|if|IJ|ij|Im|ip|is|lA|la|lB|lb|lC|lc|lf|lh|lk|lq|lt|lz|mc|mi|mo|mu|nb|nc|nm|no|OE|oe|Of|OK|Om|oq|OR|or|pc|pd|pl|Po|pp|ps|pt|r!|r\?|rA|ra|rB|rb|rC|rc|Re|rf|rg|rh|rk|rn|rq|rs|rt|ru|S1|S2|S3|sb|sc|Sd|sd|sh|sl|SP|sp|sq|sr|ss|st|te|tf|ti|tm|TP|Tp|uA|ua|ul|vA|va|wp|Ye)
   scaling_width: '[+-]?[0-9]*.[0-9]*[ciPpfvmnuM]'
   # Zero-padded left to at least 4 digits, letters uppercase only
@@ -45,9 +45,12 @@ contexts:
       scope: punctuation.delimiter.mandoc
     # Font requests
     - match: \\f[BIPR1-4]
-      scope: invalid.deprecated.mandoc
+      scope: constant.character.escape.mandoc
     - match: \\f\((?:BI|C[BIRW])
-      scope: invalid.deprecated.mandoc
+      scope: constant.character.escape.mandoc
+    # Macro arguments
+    - match: \\\\\$[*1-9]+
+      scope: variable.language.mandoc
     ## Special characters
     # Refer to the `SPECIAL CHARACTERS' section of roff(7)
     - match: \\{{one_char_escape}}
