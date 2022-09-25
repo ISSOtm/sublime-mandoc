@@ -1,0 +1,1136 @@
+%YAML 1.2
+# Written by ISSOtm, taking inspiration from FichteFoll's own never-published syntax
+# Sources:
+#   - man(7)
+#   - man-pages(7)
+#   - mdoc(7)
+#   - mdoc.samples(7)
+#   - groff(7)
+---
+# See http://www.sublimetext.com/docs/3/syntax.html
+name: Mdoc Page (groff/troff)
+scope: text.troff.mdoc
+file_extensions: [man, groff, troff, '1', '2', '3', '4', '5', '6', '7', '8', '9']
+first_line_match: ^(?:\.Dt|['.]\\")
+
+variables:
+  argument: ("[^"]*"|[^\s\\]+)
+  # No lowercase, must be 0-padded if smaller than 4 chars, but not otherwise
+  # TODO: maybe try to filter out-of-range values, too?
+  good_unicode_point: 0[0-9A-F]{3}|[1-9A-F][0-9A-F]{3,}
+
+# TODO: support quoted arguments (see rgbds.5:223 for a good example)
+# TODO: handle things described in roff(7) as well
+# TODO: use this line in syntax tests:
+# .Sy This should not cause any symbols not to be found, please report a bug (see Sx BUGS Ns Sy ) if this occurs.
+
+contexts:
+  prototype:
+    # Comment
+    - match: ^\.\\"
+      scope: punctuation.definition.comment.begin.mdoc
+      push:
+        - meta_include_prototype: false
+        - meta_scope: comment.line.mdoc
+        - include: eol-pop
+    # Delimiters
+    - match: \s([(\[.,:;)\]?!|]|\\\.)(?=\s|$)
+      captures:
+        1: punctuation.delimiter.mdoc
+    # Escape sequences
+    # https://mandoc.bsd.lv/man/mandoc_char.7.html
+    # TODO: these are the canonical forms, but e.g. `\[rs]` can be used instead of `\(rs`
+    - match: \\[ ~0|^&)%:]
+      scope: constant.character.escape.mdoc
+
+    - match: \\\((ba|br|ul|ru|rn|bb|sl|rs)
+      scope: constant.character.escape.mdoc
+
+    - match: \\\((ci|bu|dd|dg|lz|sq|ps|sc|lh|rh|at|sh|CR|OK|CL|SP|HE|DI)
+      scope: constant.character.escape.mdoc
+
+    - match: \\\((co|rg|tm)
+      scope: constant.character.escape.mdoc
+
+    - match: \\\((em|en|hy|r[!?])
+      scope: constant.character.escape.mdoc
+    - match: \\e
+      scope: constant.character.escape.backslash.mdoc
+    - match: \\\.
+      scope: invalid.deprecated.mdoc
+
+    - match: \\\((Bq|bq|lq|rq|oq|cq|aq|dq|[Ff][oc])
+      scope: constant.character.escape.mdoc
+
+    - match: \\\(([lr][BCatkb]|bv)
+      scope: constant.character.escape.mdoc
+    - match: brace(ex|(left|right)(tp|mid|bt|ex))|(bracket|paren)(left|right)(tp|bt|ex)
+      scope: constant.character.escape.mdoc
+
+    - match: \\\((<-|->|<>|[duv]a|[lrhudv]A|an)
+      scope: constant.character.escape.mdoc
+
+    - match: \\\((AN|OR|no|te|fa|st|tf|3d|or)
+      scope: constant.character.escape.mdoc
+    - match: \\\[tno\]
+      scope: constant.character.escape.mdoc
+
+    - match: \\-
+      scope: constant.character.escape.minus.mdoc
+    - match: \\\((mi|pl|-\+|\+-|pc|mu|c[*+]|di|f/|\*\*|<=|>=|<<|>>|eq|!=|==|ne|ap|\|=|=~|~~|~=|pt|es|mo|nm|sb|nb|sp|nc|ib|ip|ca|cu|/_|pp|is|gr|sr|lc|rc|lf|rf|if|Ah|Im|Re|wp|pd|-h|12|[13]4|[1357]8|S[123])
+      scope: constant.character.escape.mdoc
+    - match: \\\[(t\+-|tmu|tdi|integral|sum|product|coproduct|sqrt|hbar)\]
+      scope: constant.character.escape.mdoc
+
+    - match: \\\((ff|fi|fl|Fi|Fl|AE|ae|OE|oe|ss|IJ|ij)
+      scope: constant.character.escape.mdoc
+
+    - match: \\['`]
+      scope: constant.character.escape.mdoc
+    - match: \\\((a[-".^abcdho~]|ga|ho|ha|ti)
+      scope: constant.character.escape.mdoc
+
+    - match: \\\((o[Aa]|'[AEIOUYaeiouy]|`[AEIOUaeiou]|~[ANOano]|:[AEIOUaeiouy]|^[AEIOUaeiou]|,[Cc]|/[LlOo])
+      scope: constant.character.escape.mdoc
+
+    - match: \\\((-D|Sd|TP|Tp|.i|.j)
+      scope: constant.character.escape.mdoc
+
+    - match: \\\((Do|ct|Eu|eu|Ye|Po|Cs|Fn)
+      scope: constant.character.escape.mdoc
+
+    - match: \\\((de|%0|fm|sd|mc|Of|Om)
+      scope: constant.character.escape.mdoc
+
+    - match: \\\((\*[ABGDEZYHIKLMNCOPRSTUFXQWabgdezyhiklmncoprstufxqw]|\+[hfpe]|ts)
+      scope: constant.character.escape.mdoc
+
+    - match: \\\*[Rq]
+      scope: invalid.deprecated.mdoc
+    - match: \\\*\((Ba|Ne|Ge|Le|Gt|Lt|Pm|If|Pi|Na|Am|Tm|Rq|Lq|lp|rp|lq|rq|ua|va|<=|>=|aa|ga|Px|Ai)
+      scope: invalid.deprecated.mdoc
+
+    - match: \\\[u({{good_unicode_point}})\]
+      scope: constant.character.escape.unicode.mdoc
+    - match: \\C'({{good_unicode_point}})'
+      scope: constant.character.escape.unicode.mdoc
+    - match: \\\[u[0-9A-Fa-f]+\]
+      scope: invalid.deprecated.mdoc
+    - match: \\C'[0-9A-Fa-f]+'
+      scope: invalid.deprecated.mdoc
+
+    - match: \\\[(radical|sqrt)ex\]
+      scope: invalid.illegal.mdoc
+    - match: \\\(ru
+      scope: invalid.illegal.mdoc
+
+    - match: \\\\
+      scope: invalid.deprecated.mdoc
+
+  # Note: `main` begins with trying to match the prologue, which replicates the macro matching form
+  # `body`, so check that one out first if you're starting to read this syntax
+  main:
+    # A well-formed mandoc document should start with certain macros.
+    # Arguably, they could be simply matched like every other macro, to offer more flexibility;
+    # there are two hitches against this, however:
+    # - mdoc(7) *mandates* that these appear first and in this order, apparently for compatibility;
+    #   besides, the "new mandoc document" command inserts a workable skeleton, so this should be OK.
+    # - `Nm` differs *greatly* depending on whether it's being called for the first time, or later,
+    #   making handling it very complicated using the "default" model.
+    - match: ^('\\")\s+[ert]*
+      scope: meta.preprocessor.mdoc
+      captures:
+        1: keyword.context.resource.mdoc
+    - match: ^\.
+      scope: punctuation.definition.keyword.begin.macro.mdoc
+      push:
+        - match: Dd(?=\s|$)
+          scope: keyword.other.date.mdoc
+          set:
+            - meta_content_scope: meta.annotation.document.date.mdoc
+            # TODO: highlight incompatible arguments (https://mandoc.bsd.lv/man/mdoc.7.html#COMPATIBILITY)
+            - match: $\n?
+              set: await-doc-header
+        - include: macro-fallback
+    - match: .+
+      scope: invalid.illegal.expect-Dd.mdoc
+
+  await-doc-header:
+    - match: ^\.
+      scope: punctuation.definition.keyword.begin.macro.mdoc
+      set:
+        - match: Dt(?=\s|$)
+          scope: keyword.other.doc-title.mdoc
+          set:
+            # TITLE (mandatory)
+            - meta_content_scope: meta.annotation.document.header.mdoc
+            - match: \S+
+              scope: markup.heading.document.title.mdoc
+              set:
+                # section (mandatory)
+                - meta_content_scope: meta.annotation.document.header.mdoc
+                - match: \S+
+                  scope: markup.heading.document.section.mdoc
+                  set:
+                    # arch (optional)
+                    - meta_content_scope: meta.annotation.document.header.mdoc
+                    - match: \S+
+                      scope: markup.heading.document.arch.mdoc
+                      set:
+                        - match: \s* # Match initial whitespace
+                        - match: .+
+                          scope: invalid.illegal.expect-eol.mdoc
+                        - match: $\n?
+                          set: await-os-name
+                    - match: $\n?
+                      set: await-os-name
+                - match: $\n?
+                  scope: invalid.illegal.expect-section.mdoc
+                  set: await-os-name
+            - match: $\n?
+              scope: invalid.illegal.expect-title.mdoc
+              set: await-os-name # Let's try doing out best...
+        - match: \S+
+          scope: invalid.illegal.expect-Dt.mdoc
+          set: await-doc-header
+    - match: .+
+      scope: invalid.illegal.expect-Dt.mdoc
+
+  await-os-name:
+    - match: ^\.
+      scope: punctuation.definition.keyword.begin.macro.mdoc
+      set:
+        - match: Os(?=\s|$)
+          scope: keyword.other.os.mdoc
+          set:
+            # System (optional)
+            - meta_content_scope: meta.annotation.document.os.mdoc
+            - match: \S+
+              scope: markup.heading.document.system.mdoc
+              set:
+                # Version (optional)
+                - meta_content_scope: meta.annotation.document.os.mdoc
+                - match: \S+
+                  scope: markup.heading.document.sys-version.mdoc
+                  set:
+                    - match: \s* # Match initial whitespace
+                    - match: .+
+                      scope: invalid.illegal.expect-eol.mdoc
+                    - match: $\n?
+                      set: await-name-section
+                - match: $\n?
+                  set: await-name-section
+            - match: $\n?
+              set: await-name-section
+        - match: \S+
+          scope: invalid.illegal.expect-Os.mdoc
+          set: await-os-name
+    - match: .+
+      scope: invalid.illegal.expect-Os.mdoc
+
+  await-name-section:
+    - match: ^\.
+      scope: punctuation.definition.keyword.begin.macro.mdoc
+      set:
+        - match: Sh(?=\s|$)
+          scope: keyword.context.block.begin.section-header.mdoc
+          set:
+            # "NAME" (required)
+            - meta_content_scope: markup.heading.name.mdoc
+            - match: NAME|((?i:NAME))
+              scope: entity.name.section.mdoc
+              captures:
+                1: invalid.deprecated.expect-uppercase.mdoc
+              set:
+                - match: \s* # Match initial whitespace
+                - match: .+
+                  scope: invalid.illegal.expect-eol.mdoc
+                - match: $\n?
+                  set: await-prognames
+            - match: $\n?
+              set: await-prognames
+        - match: \S+
+          scope: invalid.illegal.expect-Sh.mdoc
+          set: await-name-section
+    - match: .+
+      scope: invalid.illegal.expect-Sh.mdoc
+
+  await-prognames:
+    - match: ^\.
+      scope: punctuation.definition.keyword.begin.macro.mdoc
+      set:
+        - match: Nm(?=\s|$)
+          scope: keyword.declaration.progname.mdoc
+          set:
+            # Program name (required)
+            - meta_content_scope: meta.annotation.document.progname.mdoc
+            - match: \S+
+              scope: entity.name.program.mdoc
+              set:
+                - match: \s* # Match initial whitespace
+                - match: .+
+                  scope: invalid.illegal.expect-eol.mdoc
+                - match: $\n?
+                  set: await-prognames
+            - match: $\n?
+              set: await-prognames
+        - match: Nd(?=\s|$)
+          scope: keyword.declaration.description.mdoc
+          set:
+            # Description
+            - meta_content_scope: meta.annotation.document.description.mdoc
+            - match: ^(?=\.\s*Sh)
+              set: body
+        - match: \S+
+          scope: invalid.illegal.expect-Nm-Nd.mdoc
+          set: await-prognames
+    - match: .+
+      scope: invalid.illegal.expect-Nm-Nd.mdoc
+
+
+  body:
+    # A dot at BOL marks a macro line!
+    - match: ^\.
+      scope: punctuation.definition.keyword.begin.macro.mdoc
+      push:
+        # According to the documentation, separating the dot from the macro name with whitespace is allowed?
+        # Try matching a word, but if none is matched, the first non-blank will trigger the "illegal" case below
+        - include: block-full-explicit
+        - include: block-full-implicit
+        - include: block-partial-explicit
+        - include: block-partial-implicit
+        - include: in-line
+        - include: macro-fallback
+
+  macro-fallback:
+    # If none of the above macro names were matched, mark the macro as unknown, and treat it as non-parsed
+    - match: \S+
+      scope: invalid.illegal.mdoc
+      pop: true
+    # Usually `eol-pop` would be used, however a macro line *must* have a macro name
+    - match: $\n?
+      scope: invalid.illegal.mdoc
+      pop: true
+
+
+  ## Macros, grouped by "block type"
+
+  # "Callable" macros are macros that can be called not at the beginning of the line
+  # "Parsed" macros are those whose bodies are checked for callable macros
+
+
+  block-full-explicit:
+    - match: Bd(?=\s|$)
+      scope: keyword.context.block.begin.display.mdoc
+      set: display-block-head
+    - match: Bf(?=\s|$)
+      scope: keyword.context.block.begin.font-mode.mdoc
+      set: font-block-head
+    - match: Bk(?=\s|$)
+      scope: keyword.context.block.begin.no-break.mdoc
+      set: no-break-block-head
+    - match: Bl(?=\s|$)
+      scope: keyword.context.block.begin.list.mdoc
+      set: list-block-head
+    # These are the closing macros, which are *not* supposed to be used outside of their parent scope
+    - match: E[dfkl](?=\s|$)
+      scope: invalid.illegal.mismatched.mdoc
+      pop: true
+
+  block-full-implicit:
+    # Nd is only supposed to exist in the prologue, and Nm is only block-full-implicit there as well
+    - match: Sh(?=\s|$)
+      scope: keyword.context.block.begin.section-header.mdoc
+      set: # Section head
+        - meta_content_scope: markup.heading.sub-section.mdoc entity.name.section.mdoc
+        - match: ^
+          set: section
+    - match: Ss(?=\s|$)
+      scope: keyword.context.block.begin.sub-section-header.mdoc
+      set: # Sub-section head
+        - meta_content_scope: markup.heading.sub-section.mdoc entity.name.section.sub-section.mdoc
+        - match: ^
+          set: sub-section
+
+  block-partial-explicit:
+    - match: Fo(?:\s+|$)
+      scope: keyword.other.function-open.mdoc
+      set:
+        - meta_content_scope: entity.name.function.mdoc
+        - include: eol-pop
+    - match: Re(?=\s|$)
+      scope: keyword.other.references-close.mdoc
+      set: eol-pop
+    - match: Rs(?=\s|$)
+      scope: keyword.other.references-end.mdoc
+      set:
+        - match: '$\n?'
+          set:
+          - meta_content_scope: meta.block.references.mdoc
+          - match: '^(\.)\s*(%[ABCDIJNOPQRTUV])(?=\s|$)'
+            captures:
+              1: punctuation.definition.keyword.begin.mdoc
+              2: keyword.other.mdoc
+            set: parsed-body
+          - match: '(?=^\.\s*Re\s|$)'
+            pop: true
+          - include: body
+    - include: callable-block-partial-explicit
+  callable-block-partial-explicit:
+    - match: Ac(?=\s|$)
+      scope: keyword.other.angle-brackets-close.mdoc
+      set: parsed-body
+    - match: Ao(?=\s|$)
+      scope: keyword.other.angle-brackets-open.mdoc
+      set: parsed-body
+    - match: Bc(?=\s|$)
+      scope: keyword.other.square-brackets-close.mdoc
+      set: parsed-body
+    - match: Bo(?=\s|$)
+      scope: keyword.other.square-brackets-open.mdoc
+      set: parsed-body
+    - match: Brc(?=\s|$)
+      scope: keyword.other.curly-braces-close.mdoc
+      set: parsed-body
+    - match: Bro(?=\s|$)
+      scope: keyword.other.curly-braces-open.mdoc
+      set: parsed-body
+    - match: Dc(?=\s|$)
+      scope: keyword.other.typographic-double-quotes-close.mdoc
+      set: parsed-body
+    - match: Do(?=\s|$)
+      scope: keyword.other.typographic-double-quotes-open.mdoc
+      set: parsed-body
+    - match: Ec(?=\s|$)
+      scope: keyword.other.enclosure-close.mdoc
+      set: parsed-body
+    - match: Eo(?=\s|$)
+      scope: keyword.other.enclosure-open.mdoc
+      set: parsed-body
+    - match: Fc(?=\s|$)
+      scope: keyword.other.function-close.mdoc
+      set: parsed-body
+    - match: Oc(?=\s|$)
+      scope: keyword.other.optional-close.mdoc
+      set: parsed-body
+    - match: Oo(?=\s|$)
+      scope: keyword.other.optional-open.mdoc
+      set: parsed-body
+    - match: Pc(?=\s|$)
+      scope: keyword.other.parens-close.mdoc
+      set: parsed-body
+    - match: Po(?=\s|$)
+      scope: keyword.other.parens-open.mdoc
+      set: parsed-body
+    - match: Qc(?=\s|$)
+      scope: keyword.other.typewriter-double-quotes-close.mdoc
+      set: parsed-body
+    - match: Qo(?=\s|$)
+      scope: keyword.other.typewriter-double-quotes-open.mdoc
+      set: parsed-body
+    - match: Sc(?=\s|$)
+      scope: keyword.other.typewriter-single-quotes-close.mdoc
+      set: parsed-body
+    - match: So(?=\s|$)
+      scope: keyword.other.typewriter-double-quotes-open.mdoc
+      set: parsed-body
+
+  # TODO: "Xo" acts like a line continuation of sorts for these and `.It`
+  block-partial-implicit:
+    - match: D1(?=\s|$)
+      scope: keyword.other.indented.mdoc
+      set: parsed-body
+    - match: Dl(?=\s|$)
+      scope: keyword.other.indented-literal.mdoc
+      set:
+        - meta-markup-raw
+        - parsed-body
+    - include: callable-block-partial-implicit
+  callable-block-partial-implicit:
+    - match: Aq(?=\s|$)
+      scope: keyword.other.angle-brackets.mdoc
+      set: parsed-body
+    - match: Bq(?=\s|$)
+      scope: keyword.other.square-brackets.mdoc
+      set: parsed-body
+    - match: Brq(?=\s|$)
+      scope: keyword.other.curly-braces.mdoc
+      set: parsed-body
+    - match: Dq(?=\s|$)
+      scope: keyword.other.typographic-double-quotes.mdoc
+      set: parsed-body
+    - match: En(?=\s|$)
+      scope: keyword.other.enclosure.mdoc invalid.deprecated.mdoc
+      set: parsed-body
+    - match: Op(?=\s|$)
+      scope: keyword.other.optional.mdoc
+      set: parsed-body
+    - match: Pq(?=\s|$)
+      scope: keyword.other.parens.mdoc
+      set: parsed-body
+    - match: Ql(?=\s|$)
+      scope: keyword.other.inline-literal.mdoc
+      set:
+        - meta-markup-raw
+        - parsed-body
+    - match: Qq(?=\s|$)
+      scope: keyword.other.typewriter-double-quotes.mdoc
+      set: parsed-body
+    - match: Sq(?=\s|$)
+      scope: keyword.other.typewriter-single-quotes.mdoc
+      set: parsed-body
+
+  in-line:
+    # %<N> macros only appear in `Rs` blocks
+    - include: callable-in-line
+    - match: Bt(?=\s|$)
+      scope: invalid.deprecated.mdoc
+    - match: Db(?=\s|$)
+      scope: invalid.deprecated.mdoc
+    - match: Ex(?=\s|$)
+      scope: keyword.other.exit-code.mdoc
+      set:
+      - match: \s((-)std)(?=\s|$)
+        captures:
+          1: variable.parameter.option.mdoc
+          2: punctuation.definition.parameter.mdoc
+        set: eol-pop
+      - include: eol-pop
+    - match: Fd(?=\s|$)
+      scope: keyword.other.preproc.mdoc
+      set:
+        - meta_content_scope: markup.raw.inline.mdoc
+        - include: eol-pop
+    - match: Hf(?=\s|$)
+      scope: invalid.illegal.mdoc
+    - match: In(?=\s|$)
+      scope: keyword.other.include.mdoc
+      set:
+        - match: "{{argument}}"
+          pop: true
+        - include: eol-pop
+    - match: Lb(?=\s|$)
+      scope: keyword.other.lib-name.mdoc
+      set:
+        - match: "{{argument}}"
+          pop: true
+        - include: eol-pop
+    - match: Lp(?=\s|$)
+      scope: invalid.deprecated.mdoc
+    - match: Pp(?=\s|$)
+      scope: keyword.other.paragraph.mdoc
+    - match: Rv(?=\s|$)
+      scope: keyword.other.retval.mdoc
+      set:
+      - match: \s((-)std)(?=\s|$)
+        captures:
+          1: variable.parameter.option.mdoc
+          2: punctuation.definition.parameter.mdoc
+        set: eol-pop
+      - include: eol-pop
+    - match: Sm(?=\s|$)
+      scope: keyword.other.spacing-toggle.mdoc
+      set:
+        - match: on|off
+          scope: variable.parameter.mdoc
+          pop: true
+        - include: eol-pop
+    - match: St(?=\s|$)
+      scope: keyword.other.standard.mdoc
+      set:
+        - include: parsed-body
+        - match: \s((-)(?:ansiC(?:-89)?|ieee(?:754|1275-94)|iso8(?:601|802-3)|iso9945-1-9[06]|iso9945-2-93|isoC(?:-90|-amd1|-tcor1|-tcor2|-99|-2011)?)|p1003\.1(?:-88|-90|b-93|b|c-95|i-95|-96|g-2000|-200[148])?|p1003\.2(?:a?-92)?|susv[1234]|svid4|xbd5|xcu5|xns5(?:\.2)?|xcurses4\.2|xpg(?:3|4|4\.2)|xsh(?:4\.2|5))(?=\s|$)
+          captures:
+            1: variable.parameter.mdoc
+            2: punctuation.definition.placeholder.mdoc
+          set: parsed-body
+        - match: "{{argument}}"
+          set: parsed-body
+        - include: eol-pop
+    - match: Ud(?=\s|$)
+      scope: invalid.deprecated.mdoc
+  callable-in-line:
+    - match: Ad(?=\s|$)
+      scope: keyword.context.mdoc
+      set:
+        - meta_content_scope: constant.other.address.mdoc
+        - include: parsed-body
+    - match: An(?=\s|$)
+      scope: keyword.context.mdoc
+      set:
+        - match: \s((-)(?:no)?split)(?=\s|$)
+          captures:
+            1: variable.parameter.option.mdoc
+            2: punctuation.definition.parameter.mdoc
+          set:
+            - meta_content_scope:  meta.annotation.author-name.mdoc
+            - include: parsed-body
+        - match: (?=\S)
+          set:
+            - meta_content_scope: meta.annotation.author-name.mdoc
+            - include: parsed-body
+        - include: eol-pop
+    - match: Ap(?=\s|$)
+      scope: keyword.other.apostrophe.mdoc
+      set: parsed-body
+    - match: Ar(?=\s|$)
+      scope: keyword.other.argument.mdoc
+      set:
+        - include: processed-parsed-body
+        - match: '\S+'
+          scope: markup.underline.argument.mdoc
+    - match: At(?=\s|$)
+      scope: keyword.other.att-version.mdoc
+      set:
+        - include: processed-parsed-body
+        - match: '\b(?:v[1-7]|32v|III|V|V\.[1-4])\b'
+        - match: '\S+'
+          scope: invalid.illegal.mdoc
+    - match: Bsx(?=\s|$)
+      scope: keyword.other.bsd-version.mdoc
+      set: parsed-body
+    - match: Bx(?=\s|$)
+      scope: keyword.other.bsd-version.mdoc
+      set: parsed-body
+    - match: Cd(?=\s|$)
+      scope: keyword.other.config-line.mdoc
+      set: parsed-body
+    - match: Cm(?=\s|$)
+      scope: keyword.other.unimpl.mdoc
+      set:
+        - include: processed-parsed-body
+        - match: '{{argument}}'
+          scope: markup.bold.modifier.mdoc
+    - match: Dv(?=\s|$)
+      scope: keyword.other.defined-variables.mdoc
+      set: parsed-body
+    - match: Dx(?=\s|$)
+      scope: keyword.other.dragonfly-version.mdoc
+      set: parsed-body
+    - match: Em(?=\s|$)
+      scope: keyword.other.emphasis.mdoc
+      set:
+        - include: processed-parsed-body
+        - match: '{{argument}}'
+          scope: markup.italic.mdoc
+    - match: Er(?=\s|$)
+      scope: keyword.other.errno.mdoc
+      set: parsed-body
+    - match: Es(?=\s|$)
+      scope: keyword.other.enclosure-delimiters.mdoc invalid.deprecated.mdoc
+      set: parsed-body
+    - match: Ev(?=\s|$)
+      scope: keyword.other.environment-variables.mdoc
+      set: parsed-body
+    - match: Fa(?=\s|$)
+      scope: keyword.other.function-arguments.mdoc
+      set: parsed-body
+    - match: Fl(?=\s|$)
+      scope: keyword.other.option.mdoc
+      set: parsed-body
+    - match: Fn(?=\s|$)
+      scope: keyword.other.function-name.mdoc
+      set: parsed-body
+    - match: Fr(?=\s|$)
+      scope: keyword.other.function-return.mdoc invalid.deprecated.mdoc
+      set: parsed-body
+    - match: Ft(?=\s|$)
+      scope: keyword.other.function-type.mdoc
+      set: parsed-body
+    - match: Fx(?=\s|$)
+      scope: keyword.other.freebsd-version.mdoc
+      set: parsed-body
+    - match: Ic(?=\s|$)
+      scope: keyword.other.interactive-command.mdoc
+      set:
+        - include: processed-parsed-body
+        - match: '{{argument}}'
+          scope: markup.bold.mdoc
+    - match: Li(?=\s|$)
+      scope: keyword.other.monospace.mdoc invalid.deprecated.mdoc
+      set:
+        - include: processed-parsed-body
+        - match: '{{argument}}'
+          scope: markup.raw.inline.mdoc
+    - match: Lk(?=\s|$)
+      scope: keyword.other.link.mdoc
+      set:
+        - include: processed-parsed-body
+        - match: '{{argument}}'
+          scope: markup.underline.link.mdoc
+          set:
+            - include: processed-parsed-body
+            - match: '{{argument}}'
+              scope: meta.link.inline.description.mdoc
+    - match: Ms(?=\s|$)
+      scope: keyword.other.math-symbol.mdoc
+      set: parsed-body
+    - match: Mt(?=\s|$)
+      scope: keyword.other.mailto.mdoc
+      set:
+        - include: processed-parsed-body
+        - match: '{{argument}}'
+          scope: markup.underline.link.mdoc
+    # Note: text after Nm is invalid, unless it's a macro... consider `.Nm Ap s` for `program's`!
+    - match: Nm(?=\s|$)
+      scope: keyword.other.prog-name.mdoc
+      set:
+        - include: processed-parsed-body
+        - match: '{{argument}}'
+          scope: markup.bold.name.mdoc
+    - match: No(?=\s|$)
+      scope: keyword.other.normal.mdoc
+      set: parsed-body
+    - match: Ns(?=\s|$)
+      scope: keyword.other.no-space.mdoc
+      set: parsed-body
+    - match: Nx(?=\s|$)
+      scope: keyword.other.netbsd-version.mdoc
+      set: parsed-body
+    - match: Ot(?=\s|$)
+      scope: keyword.other.old-func-type.mdoc invalid.deprecated.mdoc
+      set: parsed-body
+    - match: Ox(?=\s|$)
+      scope: keyword.other.openbsd-version.mdoc
+      set: parsed-body
+    - match: Pa(?=\s|$)
+      scope: keyword.other.path.mdoc
+      set: parsed-body
+    - match: Pf(?=\s|$)
+      scope: keyword.other.prefix.mdoc
+      set:
+        - meta_include_prototype: false
+        - match: '{{argument}}'
+          set: callable-in-line
+        - include: eol-pop
+    - match: Sx(?=\s|$)
+      scope: keyword.other.section-ref.mdoc
+      set:
+        - include: processed-parsed-body
+        - match: '{{argument}}'
+          scope: markup.underline.link.mdoc
+    - match: Sy(?=\s|$)
+      scope: keyword.other.bold.mdoc
+      set:
+        - include: processed-parsed-body
+        - match: '{{argument}}'
+          scope: markup.bold.mdoc
+    - match: Tn(?=\s|$)
+      scope: keyword.other.tradename.mdoc invalid.deprecated.mdoc
+      set: parsed-body
+    - match: Ux(?=\s|$)
+      scope: keyword.other.unix.mdoc invalid.deprecated.mdoc
+      set: parsed-body
+    - match: Va(?=\s|$)
+      scope: keyword.other.variable-name.mdoc
+      set: parsed-body
+    - match: Vt(?=\s|$)
+      scope: keyword.other.variable-type.mdoc
+      set: parsed-body
+    - match: Xr(?=\s|$)
+      scope: keyword.other.cross-reference.mdoc
+      set: parsed-body
+
+
+  # Use this to apply special processing to the body
+  # (i.e. you have an equivalent to parsed-body's '{{argument}}' rule yourself)
+  processed-parsed-body:
+    - include: callable-block-partial-explicit
+    - include: callable-block-partial-implicit
+    - include: callable-in-line
+    - include: eol-pop
+  parsed-body:
+    - include: processed-parsed-body
+    # Consume text that wasn't matched by the above,
+    # so that macros are only recognized if preceded by whitespace
+    - match: '{{argument}}'
+
+
+  ## Contexts pushed into by block-full-explicit macros
+
+
+  display-block-head:
+    - match: \s((-)centered)(?=\s|$)
+      scope: invalid.deprecated.inconsistent.mdoc
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - display-block
+        - expect-eol
+        - expect-compact
+        - expect-offset
+    - match: \s((-)filled)(?=\s|$)
+      scope: invalid.deprecated.ragged.mdoc
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - display-block
+        - expect-eol
+        - expect-compact
+        - expect-offset
+    - match: \s((-)literal)(?=\s|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - display-block-literal
+        - expect-eol
+        - expect-compact
+        - expect-offset
+    - match: \s((-)ragged)(?=\s|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - display-block
+        - expect-eol
+        - expect-compact
+        - expect-offset
+    - match: \s((-)unfilled)(?=\s|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - display-block
+        - expect-eol
+        - expect-compact
+        - expect-offset
+    - match: \s((-)file)(?=\s|$)
+      scope: invalid.illegal.unsupported.mdoc
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - display-block
+        - expect-eol
+        - expect-compact
+        - expect-offset
+
+  expect-offset:
+    - match: \s((-)offset)(?=\s|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set: size-arg
+    - include: else-pop
+  expect-width:
+    - match: \s((-)width)(?=\s|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set: size-arg
+    - include: else-pop
+  size-arg:
+    - match: \s(indent(?:-two)?|left|Ds) # Ds is an "imaginary macro", so treat it as a constant
+      captures:
+        1: constant.language.offset.mdoc
+      pop: true
+    - match: \s(center|right)
+      captures:
+        1: invalid.deprecated.not-implemented.mdoc constant.language.offset.mdoc
+      pop: true
+    # TODO: roff(7) scaling widths
+    - match: \s(\S+) # Implicitly, ends on either whitespace on EOL
+      captures:
+        1: variable.parameter.length.mdoc
+      pop: true
+    - include: else-pop
+
+  expect-compact:
+    - match: \s((-)compact)(?=\s|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      pop: true
+    - include: else-pop
+
+  display-block-literal:
+    - meta_content_scope: markup.raw.block.mdoc
+    - include: display-block
+  display-block:
+    - meta_content_scope: meta.block.display.mdoc
+    - match: ^(\.)\s*(Ed)(?:\s+(.*)|$)
+      captures:
+        1: punctuation.definition.keyword.begin.macro.mdoc
+        2: keyword.context.block.end.display.mdoc
+        3: invalid.illegal.expect-eol.mdoc
+      pop: true
+    - include: body
+
+
+  font-block-head:
+    - match: \s((-)emphasis|Em)(?:\s+(.*)|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - italic-font-mode-block
+        - expect-eol
+    - match: \s((-)literal|Li)(?:\s+(.*)|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - raw-font-mode-block
+        - expect-eol
+    - match: \s((-)symbolic|Sy)(?:\s+(.*)|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - bold-font-mode-block
+        - expect-eol
+
+  italic-font-mode-block:
+    - meta_content_scope: markup.italic.block.mdoc
+    - include: font-mode-block
+  raw-font-mode-block:
+    - meta_content_scope: markup.raw.block.mdoc
+    - include: font-mode-block
+  bold-font-mode-block:
+    - meta_content_scope: markup.bold.block.mdoc
+    - include: font-mode-block
+  font-mode-block:
+    - meta_content_scope: meta.block.font-mode.mdoc
+    - match: ^(\.)\s*(Ef)(?:\s+(.*)|$)
+      captures:
+        1: punctuation.definition.keyword.begin.macro.mdoc
+        2: keyword.context.block.end.font-mode.mdoc
+        3: invalid.illegal.expect-eol.mdoc
+      pop: true
+    - include: body
+
+
+  no-break-block-head:
+    - match: \s((-)words)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - no-break-block
+        - expect-eol
+
+  no-break-block:
+    - meta_content_scope: meta.block.no-break.mdoc
+    - match: ^(\.)\s*(Ek)(?:\s+(.*)|$)
+      captures:
+        1: punctuation.definition.keyword.begin.macro.mdoc
+        2: keyword.context.block.end.no-break.mdoc
+        3: invalid.illegal.expect-eol.mdoc
+      pop: true
+    - include: body
+
+
+  list-block-head:
+    - match: \s((-)(?:bullet|dash|hyphen|item))(?=\s|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - meta-unnumbered-list
+        - headless-list-block
+        - expect-eol
+        - expect-compact
+        - expect-offset
+        - expect-width
+    - match: \s((-)enum)(?=\s|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - meta-numbered-list
+        - headless-list-block
+        - expect-eol
+        - expect-compact
+        - expect-offset
+        - expect-width
+    - match: \s((-)column)(?=\s|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - meta-table
+        - columnated-list-block
+        - table-column-widths
+        - expect-compact
+        - expect-offset
+        - expect-width
+    - match: \s((-)diag)(?=\s|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - meta-unnumbered-list
+        - nonparsed-heads-list-block
+        - expect-eol
+        - expect-compact
+        - expect-offset
+        - expect-width
+    - match: \s((-)(?:hang|inset|ohang|tag))(?=\s|$)
+      captures:
+        1: variable.parameter.option.mdoc
+        2: punctuation.definition.parameter.mdoc
+      set:
+        - meta-unnumbered-list
+        - head-list-block
+        - expect-eol
+        - expect-compact
+        - expect-offset
+        - expect-width
+
+  table-column-widths:
+    - meta_content_scope: meta.annotation.parameters.column-widths.mdoc
+    - match: ^
+      pop: true
+
+  headless-list-block:
+    - match: ^(\.)\s*(It)(?:\s+(.*)|$)
+      captures:
+        1: punctuation.definition.keyword.begin.macro.mdoc
+        2: keyword.context.block.begin.list-item.mdoc
+        3: invalid.illegal.mdoc
+      push: # List item head (empty, illegal chars matched above)
+        - match: ^
+          set: list-item-block
+    - include: list-block
+  columnated-list-block:
+    - match: ^(\.)\s*(It)(?=\s|$)
+      captures:
+        1: punctuation.definition.keyword.begin.macro.mdoc
+        2: keyword.context.block.begin.table-row.mdoc
+      push: table-row-block
+    - include: list-block
+  nonparsed-heads-list-block:
+    - match: ^(\.)\s*(It)(?=\s|$)
+      captures:
+        1: punctuation.definition.keyword.begin.macro.mdoc
+        2: keyword.context.block.begin.list-item.mdoc
+      push: # List item head
+        - meta_content_scope: meta.annotation.identifier.list-item.mdoc
+        - match: ^
+          set: list-item-block
+    - include: list-block
+  head-list-block:
+    - match: ^(\.)\s*(It)(?=\s|$)
+      captures:
+        1: punctuation.definition.keyword.begin.macro.mdoc
+        2: keyword.context.block.begin.list-item.mdoc
+      push: # List item head
+        - meta_content_scope: meta.annotation.identifier.list-item.mdoc
+        - match: ^
+          set: list-item-block
+        - include: parsed-body
+    - include: list-block
+  list-block:
+    - meta_content_scope: meta.block.list.mdoc
+    - match: ^(\.)\s*(El)(?:\s+(.*)|$)
+      captures:
+        1: punctuation.definition.keyword.begin.macro.mdoc
+        2: keyword.context.block.end.list.mdoc
+        3: invalid.illegal.expect-eol.mdoc
+      pop: true
+    - include: body
+
+
+  ## Contexts pushed into by block-full-implicit macros
+
+
+  meta-unnumbered-list:
+    - meta_content_scope: markup.list.unnumbered.mdoc
+    - match: ''
+      pop: true
+  meta-numbered-list:
+    - meta_content_scope: markup.list.numbered.mdoc
+    - match: ''
+      pop: true
+  meta-table:
+    - meta_content_scope: markup.other.table.mdoc
+    - match: ''
+      pop: true
+  list-item-block:
+    - meta_content_scope: meta.block.list-item.mdoc
+    - include: Bl-item-block
+    - include: body
+  table-row-block:
+    - meta_content_scope: meta.block.table-row.mdoc
+    - include: table-row-special
+    - match: '$\n?'
+      set:
+        - include: table-row-special
+        - match: '(?=\S)'
+          push: body
+          with_prototype:
+            - include: table-row-special-pop
+    - match: '(?=\S)'
+      push: parsed-body
+      with_prototype:
+        - include: table-row-special-pop
+  table-row-special-pop:
+    - include: Bl-item-block
+    - match: '(?=\s(?:Ta|\t)\s|$)'
+      pop: true
+  table-row-special:
+    - match: \s(Ta|\t)(?=\s|$)
+      captures:
+        1: punctuation.separator.sequence.columns.mdoc
+    - include: Bl-item-block
+  Bl-item-block:
+    - match: ^(?=\.\s*(?:It|El))
+      pop: true
+
+  section:
+    - meta_content_scope: meta.block.section.mdoc
+    - match: ^(?=\.\s*Sh)
+      pop: true
+    - include: body
+
+  sub-section:
+    - meta_content_scope: meta.block.sub-section.mdoc
+    - match: ^(?=\.\s*S[hs])
+      pop: true
+    - include: body
+
+
+  ## Contexts pushed into by block-partial-explicit macros
+
+
+  bpe:
+    - match: ''
+
+
+  ## Contexts pushed into by block-partial-implicit macros
+
+
+  meta-markup-raw:
+    - meta_scope: markup.raw.inline.mdoc
+    - match: ''
+      pop: true
+
+
+  ## Contexts pushed into by in-line macros
+
+
+  inl:
+    - match: ''
+
+
+
+  # Utility scopes
+
+  else-pop:
+    - match: \s+(?=\s) # Discard whitespace, but always leave one for pseudo-look-back
+    - match: ''
+      pop: true
+
+  eol-pop:
+    - match: $\n?
+      pop: true
+
+  expect-eol:
+    - match: \s* # This will match any initial whitespace...
+    - match: .+
+      scope: invalid.illegal.expect-eol.mdoc
+    - match: $\n?
+      pop: true

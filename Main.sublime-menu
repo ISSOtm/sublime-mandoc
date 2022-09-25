@@ -3,17 +3,11 @@
 		"id": "tools",
 		"children": [
 			{
-				"id": "packages",
-				"caption": "Packages",
+				"id": "mandoc",
+				"caption": "Mandoc",
 				"children": [
-					{
-						"id": "mandoc",
-						"caption": "Mandoc",
-						"children": [
-							{ "caption": "New Mandoc Document", "command": "mandoc_new" }
-						],
-					}
-				]
+					{ "caption": "New Mandoc Document", "command": "mandoc_new" }
+				],
 			}
 		],
 	}

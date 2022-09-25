@@ -1,5 +1,5 @@
 {
-	"scope": "entity.name.section.mandoc",
+	"scope": "entity.name.section.mdoc",
 
 	"completions": [
 		"NAME",
